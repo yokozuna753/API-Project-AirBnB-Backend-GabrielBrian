@@ -49,6 +49,8 @@ router.post(
 
     const safeUser = {
       id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       username: user.username,
     };
@@ -97,7 +99,7 @@ fetch('/api/session', {
   method: 'POST',
   headers: {
     "Content-Type": "application/json",
-    "XSRF-TOKEN": `UKM44b2I-yXhE9YLcWwZt-_ESy9c0DDi9Yug`
+    "XSRF-TOKEN": `w0sPzinp-CCLyCp3T6bImmDbedraAbDJL2x8`
   },
   body: JSON.stringify({ credential: 'demo@user.io', password: 'password' })
 }).then(res => res.json()).then(data => console.log(data));
