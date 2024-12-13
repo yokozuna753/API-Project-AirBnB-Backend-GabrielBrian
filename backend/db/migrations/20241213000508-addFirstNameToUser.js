@@ -32,6 +32,9 @@ module.exports = {
      */
     options.tableName = "Users";
 
-    await queryInterface.removeColumn(options, "firstName");
+    await queryInterface.removeColumn(
+      { tableName: "Users", schema: options.schema },
+      "firstName"
+    );
   },
 };
