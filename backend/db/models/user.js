@@ -11,6 +11,29 @@ module.exports = (sequelize, DataTypes) => {
 
   User.init(
     {
+      firstName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          len: [4, 30],
+          checkLength(val) {
+            if (val.length < 4)
+              throw new Error("last name must be at least 4 characters");
+          },
+        },
+      },
+      lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          len: [4, 30],
+          checkLength(val) {
+            if (val.length < 4)
+              throw new Error("last name must be at least 4 characters");
+          },
+        },
+      },
+
       username: {
         type: DataTypes.STRING,
         allowNull: false,
