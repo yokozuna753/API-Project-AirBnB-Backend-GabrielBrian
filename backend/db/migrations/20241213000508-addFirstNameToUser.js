@@ -31,10 +31,10 @@ module.exports = {
      * await queryInterface.dropTable('users');
      */
     options.tableName = "Users";
+    options.columnName = "firstName";
 
     await queryInterface.removeColumn(
-      { tableName: "Users", schema: options.schema },
-      "firstName"
+      options,
     );
   },
 };
