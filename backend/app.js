@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 require('express-async-errors');
 const morgan = require('morgan');
@@ -35,7 +37,7 @@ if (!isProduction) {
       cookie: {
         secure: isProduction,
         sameSite: isProduction && "Lax",
-        httpOnly: true
+        httpOnly: true,
       }
     })
   );
