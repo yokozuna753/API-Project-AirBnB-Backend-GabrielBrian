@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { User } = require('../../db/models');
 const { setTokenCookie } = require('../../utils/auth');
-const { check, validationResult } = require('express-validator'); // For input validation
+const { check, validationResult } = require('express-validator');
 const router = express.Router();
 
 // Input validation rules
@@ -38,27 +38,37 @@ const validateSignup = [
     .withMessage('Password must be at least 6 characters long'),
 ];
 
+// Middleware to handle validation errors and return 400 if any
+const handleValidationErrors = (req, _res, next) => {
+  const validationErrors = validationResult(req);
+  if (!validationErrors.isEmpty()) {
+    const errors = {};
+    validationErrors
+      .array()
+      .forEach(error => errors[error.path] = error.msg);
+
+    const err = Error('Bad Request');
+    err.errors = errors;
+    err.status = 400;
+    err.title = 'Bad Request';
+    return next(err);
+  }
+  return next();  // Continue to the next middleware or route handler
+};
+
 // Route to Sign Up a User
 router.post(
   '/',
-  validateSignup, 
+  validateSignup,  
+  handleValidationErrors,  // Handle validation errors (400 Bad Request)
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: 'Bad Request',
-        errors: errors.mapped(),
-      });
-    }
-
     const { firstName, lastName, email, password, username } = req.body;
     const hashedPassword = bcrypt.hashSync(password); 
 
     try {
-      // Create a new user in db
+      // Try to create a new user in the db
       const user = await User.create({ email, username, hashedPassword, firstName, lastName });
 
-     
       const safeUser = {
         id: user.id,
         firstName: user.firstName,
@@ -70,23 +80,42 @@ router.post(
       // Set a token cookie for the newly created user
       await setTokenCookie(res, safeUser);
 
-      
+      // Return the created user with a 201 status
       return res.status(201).json({
         user: safeUser,
       });
     } catch (error) {
       
-      console.error(error);
+      console.error('Error creating user:', error);
+
+      // Check if the error is related to a duplicate user (unique constraint violation)
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        
+        console.log('Duplicate user error:', error);
+
+        // Handle the case where a user already exists with the provided email or username
+        return res.status(500).json({
+          message: 'User already exists',
+          errors: {
+            email: 'User with that email already exists',
+            username: 'User with that username already exists',
+          },
+        });
+      }
+
+      // If it's any other error, return a generic 500 error
       return res.status(500).json({
-        message: 'User already exists',
+        message: 'Internal Server Error',
         errors: {
-          email: 'User with that email already exists',
-          username: 'User with that username already exists',
+          general: 'An unexpected error occurred while creating the user.',
         },
       });
     }
   }
 );
+
+module.exports = router;
+
 
 
 /*
