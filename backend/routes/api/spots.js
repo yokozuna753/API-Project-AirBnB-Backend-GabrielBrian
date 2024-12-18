@@ -2,6 +2,7 @@ const express = require("express");
 const { requireAuth } = require("../../utils/auth");
 const { Spot, Review, SpotImage, User } = require("../../db/models");
 const { check, validationResult } = require("express-validator");
+const {validator} = require('validator');
 
 const router = express.Router();
 
@@ -21,32 +22,34 @@ const validateSpotFields = [
     .notEmpty().withMessage("Country is required"),
   check("lat")
     .notEmpty().withMessage("Latitude must be within -90 and 90")
-    .bail()
+    // .bail()
     .isFloat({ min: -90, max: 90 }).withMessage("Latitude must be within -90 and 90"),
   check("lng")
     .notEmpty().withMessage("Longitude must be within -180 and 180")
-    .bail()
+    // .bail()
     .isFloat({ min: -180, max: 180 }).withMessage("Longitude must be within -180 and 180"),
   check("name")
     .notEmpty().withMessage("Name is required")
-    .bail()
+    // .bail()
     .isLength({ max: 50 }).withMessage("Name must be less than 50 characters"),
   check("description")
     .notEmpty().withMessage("Description is required"),
   check("price")
     .notEmpty().withMessage("Price per day must be a positive number")
-    .bail()
+    // .bail()
     .isFloat({ min: 0 }).withMessage("Price per day must be a positive number"),
 ];
 
 // Middleware to handle validation errors
 function handleValidationErrors(req, res, next) {
   const validationErrors = validationResult(req);
+  // console.log(validationErrors);
   if (!validationErrors.isEmpty()) {
     const errors = {};
     validationErrors.array().forEach((error) => {
-      if (!errors[error.param]) {
-        errors[error.param] = error.msg;
+
+      if (!errors[error.path]) {
+        errors[error.path] = error.msg;
       }
     });
     console.log("Validation errors:", {
@@ -227,20 +230,39 @@ router.post("/", requireAuth, validateSpotFields, handleValidationErrors, async 
       createdAt: newSpot.createdAt,
       updatedAt: newSpot.updatedAt,
     });
-  } catch (error) {
+
+    
+  }  catch (error) {
     console.error("Error in POST /api/spots:", error);
-    // Handle Sequelize validation errors if any
-    if (error.name === 'SequelizeValidationError') {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = err.message;
-      });
-      return res.status(400).json({
-        message: "Bad Request",
-        errors,
-      });
-    }
-    return res.status(500).json({ message: "Internal Server Error" });
+    
+    // If there's a Sequelize validation error, process it
+
+
+    const errors = validationResult(req);
+    console.log(errors);
+    // if (error.name === 'SequelizeValidationError') {
+    //   const errors = {};
+    //   console.error(error, 'THIS IS THE ERROR WE GET');
+
+
+    //   // Iterate through the Sequelize errors and extract the field and message
+    //   error.errors.forEach((err) => {
+    //     errors[err.path] = err.message;
+    //     console.log(err);
+        
+    //   });
+
+    //   // Return a structured error response with a 400 Bad Request
+    //   return res.status(400).json({
+    //     message: "Bad Request",  // You could also use "Validation Error" if you prefer
+    //     errors,
+    //   });
+    // }
+
+    // If it's an unexpected error, return a generic internal server error
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
   }
 });
 
