@@ -7,41 +7,41 @@ const router = express.Router();
 
 // Input validation rules
 const validateSignup = [
-  // check('firstName')
-  //   .exists({ checkFalsy: true })
-  //   .withMessage('First Name is required'),
-  // check('lastName')
-  //   .exists({ checkFalsy: true })
-  //   .withMessage('Last Name is required'),
-  // check('email')
-  //   .isEmail()
-  //   .withMessage('Invalid email')
-  //   .custom(async (value) => {
-  //     const user = await User.findOne({ where: { email: value } });
-  //     if (user) {
-  //       // Throw a custom error with status 500 for duplicate email
-  //       const error = new Error('User with that email already exists');
-  //       error.status = 500;
-  //       throw error;
-  //     }
-  //   }),
-  // check('username')
-  //   .exists({ checkFalsy: true })
-  //   .withMessage('Username is required')
-  //   .custom(async (value) => {
-  //     const user = await User.findOne({ where: { username: value } });
-  //     if (user) {
-  //       // Throw a custom error with status 500 for duplicate username
-  //       const error = new Error('User with that username already exists');
-  //       error.status = 500;
-  //       throw error;
-  //     }
-  //   }),
-  // check('password')
-  //   .exists({ checkFalsy: true })
-  //   .withMessage('Password is required')
-  //   .isLength({ min: 6 })
-  //   .withMessage('Password must be at least 6 characters long'),
+  check('firstName')
+    .exists({ checkFalsy: true })
+    .withMessage('First Name is required'),
+  check('lastName')
+    .exists({ checkFalsy: true })
+    .withMessage('Last Name is required'),
+  check('email')
+    .isEmail()
+    .withMessage('Invalid email')
+    .custom(async (value) => {
+      const user = await User.findOne({ where: { email: value } });
+      if (user) {
+        // Throw a custom error with status 500 for duplicate email
+        const error = new Error('User with that email already exists');
+        error.status = 500;
+        throw error;
+      }
+    }),
+  check('username')
+    .exists({ checkFalsy: true })
+    .withMessage('Username is required')
+    .custom(async (value) => {
+      const user = await User.findOne({ where: { username: value } });
+      if (user) {
+        // Throw a custom error with status 500 for duplicate username
+        const error = new Error('User with that username already exists');
+        error.status = 500;
+        throw error;
+      }
+    }),
+  check('password')
+    .exists({ checkFalsy: true })
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
 ];
 
 // Middleware to handle validation errors and return 400 if any
