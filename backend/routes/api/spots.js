@@ -2,7 +2,7 @@ const express = require("express");
 const { requireAuth } = require("../../utils/auth");
 const { Spot, Review, SpotImage, User } = require("../../db/models");
 const { check, validationResult } = require("express-validator");
-const {validator} = require('validator');
+const { validator } = require("validator");
 
 const router = express.Router();
 
@@ -12,32 +12,40 @@ const router = express.Router();
 
 // Validation rules exactly as per the docs
 const validateSpotFields = [
-  check("address")
-    .notEmpty().withMessage("Street address is required"),
-  check("city")
-    .notEmpty().withMessage("City is required"),
-  check("state")
-    .notEmpty().withMessage("State is required"),
-  check("country")
-    .notEmpty().withMessage("Country is required"),
+  check("address").notEmpty().withMessage("Street address is required"),
+  check("city").notEmpty().withMessage("City is required"),
+  check("state").notEmpty().withMessage("State is required"),
+  check("country").notEmpty().withMessage("Country is required"),
   check("lat")
-    .notEmpty().withMessage("Latitude must be within -90 and 90")
+    .notEmpty()
+    .withMessage("Latitude must be within -90 and 90")
     // .bail()
-    .isFloat({ min: -90, max: 90 }).withMessage("Latitude must be within -90 and 90"),
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("Latitude must be within -90 and 90"),
   check("lng")
-    .notEmpty().withMessage("Longitude must be within -180 and 180")
+    .notEmpty()
+    .withMessage("Longitude must be within -180 and 180")
     // .bail()
-    .isFloat({ min: -180, max: 180 }).withMessage("Longitude must be within -180 and 180"),
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("Longitude must be within -180 and 180"),
   check("name")
-    .notEmpty().withMessage("Name is required")
+    .notEmpty()
+    .withMessage("Name is required")
     // .bail()
-    .isLength({ max: 50 }).withMessage("Name must be less than 50 characters"),
-  check("description")
-    .notEmpty().withMessage("Description is required"),
+    .isLength({ max: 50 })
+    .withMessage("Name must be less than 50 characters"),
+  check("description").notEmpty().withMessage("Description is required"),
   check("price")
-    .notEmpty().withMessage("Price per day must be a positive number")
+    .notEmpty()
+    .withMessage("Price per day must be a positive number")
     // .bail()
-    .isFloat({ min: 0 }).withMessage("Price per day must be a positive number"),
+    .isFloat({ min: 0 })
+    .withMessage("Price per day must be a positive number"),
+];
+
+const validateReviews = [
+  check("review").notEmpty().withMessage("Review text is required"),
+  check('stars').notEmpty().isInt({ min: 1, max: 5 }).withMessage("Stars must be an integer from 1 to 5")
 ];
 
 // Middleware to handle validation errors
@@ -47,7 +55,6 @@ function handleValidationErrors(req, res, next) {
   if (!validationErrors.isEmpty()) {
     const errors = {};
     validationErrors.array().forEach((error) => {
-
       if (!errors[error.path]) {
         errors[error.path] = error.msg;
       }
@@ -109,9 +116,11 @@ router.get("/", async (req, res) => {
     const allSpots = await Spot.findAll();
 
     // Add avgRating and previewImage to each spot
-    const spotsWithInfo = await Promise.all(allSpots.map(async (spot) => {
-      return await addExtraSpotInfo(spot);
-    }));
+    const spotsWithInfo = await Promise.all(
+      allSpots.map(async (spot) => {
+        return await addExtraSpotInfo(spot);
+      })
+    );
 
     return res.status(200).json({ Spots: spotsWithInfo });
   } catch (error) {
@@ -127,9 +136,11 @@ router.get("/current", requireAuth, async (req, res) => {
     const userSpots = await Spot.findAll({ where: { ownerId: currentUserId } });
 
     // Add avgRating and previewImage to each spot
-    const spotsWithInfo = await Promise.all(userSpots.map(async (spot) => {
-      return await addExtraSpotInfo(spot);
-    }));
+    const spotsWithInfo = await Promise.all(
+      userSpots.map(async (spot) => {
+        return await addExtraSpotInfo(spot);
+      })
+    );
 
     return res.status(200).json({ Spots: spotsWithInfo });
   } catch (error) {
@@ -144,9 +155,17 @@ router.get("/:spotId", async (req, res) => {
     const { spotId } = req.params;
     const spot = await Spot.findByPk(spotId, {
       include: [
-        { model: SpotImage, as: "SpotImages", attributes: ["id", "url", "preview"] },
-        { model: User, as: "Owner", attributes: ["id", "firstName", "lastName"] }
-      ]
+        {
+          model: SpotImage,
+          as: "SpotImages",
+          attributes: ["id", "url", "preview"],
+        },
+        {
+          model: User,
+          as: "Owner",
+          attributes: ["id", "firstName", "lastName"],
+        },
+      ],
     });
 
     if (!spot) {
@@ -158,7 +177,7 @@ router.get("/:spotId", async (req, res) => {
     // Calculate numReviews and avgStarRating
     const reviews = await Review.findAll({
       where: { spotId: spot.id },
-      attributes: ["stars"]
+      attributes: ["stars"],
     });
 
     const numReviews = reviews.length;
@@ -187,7 +206,7 @@ router.get("/:spotId", async (req, res) => {
       numReviews: numReviews,
       avgStarRating: numReviews > 0 ? avgStarRating : 0,
       SpotImages: spotData.SpotImages || [],
-      Owner: spotData.Owner
+      Owner: spotData.Owner,
     };
 
     return res.status(200).json(finalSpot);
@@ -198,73 +217,85 @@ router.get("/:spotId", async (req, res) => {
 });
 
 // 4. POST /api/spots - Create a new Spot
-router.post("/", requireAuth, validateSpotFields, handleValidationErrors, async (req, res) => {
-  try {
-    const { address, city, state, country, lat, lng, name, description, price } = req.body;
+router.post(
+  "/",
+  requireAuth,
+  validateSpotFields,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const {
+        address,
+        city,
+        state,
+        country,
+        lat,
+        lng,
+        name,
+        description,
+        price,
+      } = req.body;
 
-    const newSpot = await Spot.create({
-      ownerId: req.user.id,
-      address,
-      city,
-      state,
-      country,
-      lat,
-      lng,
-      name,
-      description,
-      price,
-    });
+      const newSpot = await Spot.create({
+        ownerId: req.user.id,
+        address,
+        city,
+        state,
+        country,
+        lat,
+        lng,
+        name,
+        description,
+        price,
+      });
 
-    return res.status(201).json({
-      id: newSpot.id,
-      ownerId: newSpot.ownerId,
-      address: newSpot.address,
-      city: newSpot.city,
-      state: newSpot.state,
-      country: newSpot.country,
-      lat: parseFloat(newSpot.lat),
-      lng: parseFloat(newSpot.lng),
-      name: newSpot.name,
-      description: newSpot.description,
-      price: parseFloat(newSpot.price),
-      createdAt: newSpot.createdAt,
-      updatedAt: newSpot.updatedAt,
-    });
+      return res.status(201).json({
+        id: newSpot.id,
+        ownerId: newSpot.ownerId,
+        address: newSpot.address,
+        city: newSpot.city,
+        state: newSpot.state,
+        country: newSpot.country,
+        lat: parseFloat(newSpot.lat),
+        lng: parseFloat(newSpot.lng),
+        name: newSpot.name,
+        description: newSpot.description,
+        price: parseFloat(newSpot.price),
+        createdAt: newSpot.createdAt,
+        updatedAt: newSpot.updatedAt,
+      });
+    } catch (error) {
+      console.error("Error in POST /api/spots:", error);
 
-    
-  }  catch (error) {
-    console.error("Error in POST /api/spots:", error);
-    
-    // If there's a Sequelize validation error, process it
+      // If there's a Sequelize validation error, process it
 
+      const errors = validationResult(req);
+      console.log(errors);
+      // if (error.name === 'SequelizeValidationError') {
+      //   const errors = {};
+      //   console.error(error, 'THIS IS THE ERROR WE GET');
 
-    const errors = validationResult(req);
-    console.log(errors);
-    // if (error.name === 'SequelizeValidationError') {
-    //   const errors = {};
-    //   console.error(error, 'THIS IS THE ERROR WE GET');
+      //   // Iterate through the Sequelize errors and extract the field and message
+      //   error.errors.forEach((err) => {
+      //     errors[err.path] = err.message;
+      //     console.log(err);
 
+      //   });
 
-    //   // Iterate through the Sequelize errors and extract the field and message
-    //   error.errors.forEach((err) => {
-    //     errors[err.path] = err.message;
-    //     console.log(err);
-        
-    //   });
+      //   // Return a structured error response with a 400 Bad Request
+      //   return res.status(400).json({
+      //     message: "Bad Request",  // You could also use "Validation Error" if you prefer
+      //     errors,
+      //   });
+      // }
 
-    //   // Return a structured error response with a 400 Bad Request
-    //   return res.status(400).json({
-    //     message: "Bad Request",  // You could also use "Validation Error" if you prefer
-    //     errors,
-    //   });
-    // }
-
-    // If it's an unexpected error, return a generic internal server error
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
+      // If it's an unexpected error, return a generic internal server error
+      return res.status(500).json({
+        message: "Internal Server Error",
+      });
+    }
   }
-});
+);
 
 // 5. POST /api/spots/:spotId/images - Add an Image to a Spot
 router.post("/:spotId/images", requireAuth, async (req, res) => {
@@ -277,8 +308,8 @@ router.post("/:spotId/images", requireAuth, async (req, res) => {
       return res.status(400).json({
         message: "Bad Request",
         errors: {
-          url: "URL is required"
-        }
+          url: "URL is required",
+        },
       });
     }
 
@@ -311,68 +342,87 @@ router.post("/:spotId/images", requireAuth, async (req, res) => {
   }
 });
 
-// 6. PUT /api/spots/:spotId - Edit a Spot
-router.put("/:spotId", requireAuth, validateSpotFields, handleValidationErrors, async (req, res) => {
-  try {
-    const { spotId } = req.params;
-    const { address, city, state, country, lat, lng, name, description, price } = req.body;
+// 6. POST /api/spots/:spotId/reviews Create a Review
+router.post("/:spotId/reviews", requireAuth);
 
-    const spot = await Spot.findByPk(spotId);
-    if (!spot) {
-      return res.status(404).json({ message: "Spot couldn't be found" });
-    }
+// 7. PUT /api/spots/:spotId - Edit a Spot
+router.put(
+  "/:spotId",
+  requireAuth,
+  validateSpotFields,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { spotId } = req.params;
+      const {
+        address,
+        city,
+        state,
+        country,
+        lat,
+        lng,
+        name,
+        description,
+        price,
+      } = req.body;
 
-    // Check ownership
-    if (spot.ownerId !== req.user.id) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
+      const spot = await Spot.findByPk(spotId);
+      if (!spot) {
+        return res.status(404).json({ message: "Spot couldn't be found" });
+      }
 
-    // Update fields
-    spot.address = address;
-    spot.city = city;
-    spot.state = state;
-    spot.country = country;
-    spot.lat = lat;
-    spot.lng = lng;
-    spot.name = name;
-    spot.description = description;
-    spot.price = price;
+      // Check ownership
+      if (spot.ownerId !== req.user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
 
-    await spot.save();
+      // Update fields
+      spot.address = address;
+      spot.city = city;
+      spot.state = state;
+      spot.country = country;
+      spot.lat = lat;
+      spot.lng = lng;
+      spot.name = name;
+      spot.description = description;
+      spot.price = price;
 
-    return res.status(200).json({
-      id: spot.id,
-      ownerId: spot.ownerId,
-      address: spot.address,
-      city: spot.city,
-      state: spot.state,
-      country: spot.country,
-      lat: parseFloat(spot.lat),
-      lng: parseFloat(spot.lng),
-      name: spot.name,
-      description: spot.description,
-      price: parseFloat(spot.price),
-      createdAt: spot.createdAt,
-      updatedAt: spot.updatedAt,
-    });
-  } catch (error) {
-    console.error("Error in PUT /api/spots/:spotId:", error);
-    // Handle Sequelize validation errors if any
-    if (error.name === 'SequelizeValidationError') {
-      const errors = {};
-      error.errors.forEach((err) => {
-        errors[err.path] = err.message;
+      await spot.save();
+
+      return res.status(200).json({
+        id: spot.id,
+        ownerId: spot.ownerId,
+        address: spot.address,
+        city: spot.city,
+        state: spot.state,
+        country: spot.country,
+        lat: parseFloat(spot.lat),
+        lng: parseFloat(spot.lng),
+        name: spot.name,
+        description: spot.description,
+        price: parseFloat(spot.price),
+        createdAt: spot.createdAt,
+        updatedAt: spot.updatedAt,
       });
-      return res.status(400).json({
-        message: "Bad Request",
-        errors,
-      });
+    } catch (error) {
+      console.error("Error in PUT /api/spots/:spotId:", error);
+      // Handle Sequelize validation errors if any
+      if (error.name === "SequelizeValidationError") {
+        const errors = {};
+        error.errors.forEach((err) => {
+          errors[err.path] = err.message;
+        });
+        return res.status(400).json({
+          message: "Bad Request",
+          errors,
+        });
+      }
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-    return res.status(500).json({ message: "Internal Server Error" });
   }
-});
+);
 
-// 7. DELETE /api/spots/:spotId - Delete a Spot
+// 8. DELETE /api/spots/:spotId - Delete a Spot
 router.delete("/:spotId", requireAuth, async (req, res) => {
   try {
     const { spotId } = req.params;
