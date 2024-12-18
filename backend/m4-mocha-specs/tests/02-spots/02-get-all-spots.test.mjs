@@ -71,3 +71,5 @@ describe("Get all Spots", function () {
     });
   });
 });
+
+
