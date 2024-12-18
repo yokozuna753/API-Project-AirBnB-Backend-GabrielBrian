@@ -343,7 +343,15 @@ router.post("/:spotId/images", requireAuth, async (req, res) => {
 });
 
 // 6. POST /api/spots/:spotId/reviews Create a Review
-router.post("/:spotId/reviews", requireAuth);
+router.post("/:spotId/reviews", requireAuth, async (req, res) => {
+  const {spotId} = req.params;
+  console.log(spotId);
+  const foundSpot = await Spot.findByPk({
+    where: {
+      id: spotId
+    }
+  })
+});
 
 // 7. PUT /api/spots/:spotId - Edit a Spot
 router.put(

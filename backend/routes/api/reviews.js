@@ -1,20 +1,14 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const express = require("express");
-const { Spot, Review, SpotImage, User } = require("../../db/models");
+
+const { Spot, Review, SpotImage, User , ReviewImage} = require("../../db/models");
 const { check, validationResult } = require("express-validator");
 const {validator} = require('validator');
 const { setTokenCookie, requireAuth } = require("../../utils/auth");
 const { handleValidationErrors } = require("../../utils/validation");
 
-const validator = require("validator");
-const {
-  Review,
-  User,
-  Spot,
-  SpotImage,
-  ReviewImage,
-} = require("../../db/models");
+
+
 const { where } = require("sequelize");
 
 const router = express.Router();
