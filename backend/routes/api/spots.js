@@ -288,7 +288,7 @@ router.get("/:spotId/reviews", async (req, res) => {
 router.get("/:spotId", async (req, res) => {
   try {
     const { spotId } = req.params;
-    const spot = await Spot.findByPk(spotId, {
+    const spot = await Spot.findByPk(spotId, { // find the spot by the id
       include: [
         {
           model: SpotImage,
@@ -297,17 +297,21 @@ router.get("/:spotId", async (req, res) => {
         },
         {
           model: User,
-          as: "Owner",
+
           attributes: ["id", "firstName", "lastName"],
         },
       ],
     });
+
+
 
     if (!spot) {
       return res.status(404).json({ message: "Spot couldn't be found" });
     }
 
     const spotData = spot.toJSON();
+
+    console.log(spotData);
 
     // Calculate numReviews and avgStarRating
     const reviews = await Review.findAll({
@@ -341,7 +345,7 @@ router.get("/:spotId", async (req, res) => {
       numReviews: numReviews,
       avgStarRating: numReviews > 0 ? avgStarRating : 0,
       SpotImages: spotData.SpotImages || [],
-      Owner: spotData.Owner,
+      Owner: spotData.User,
     };
 
     return res.status(200).json(finalSpot);
