@@ -1,46 +1,74 @@
-// routes/spot-images.js
-
 const express = require('express');
-const { SpotImage, Spot, Review, User, ReviewImage } = require('../db/models');
-const { requireAuth } = require('../utils/auth');
+const { SpotImage, Spot } = require('../../db/models');
+const { requireAuth } = require('../../utils/auth');
+const { check, validationResult } = require('express-validator');
 const router = express.Router();
 
+// Validation middleware for imageId (ensure it is a valid number)
+const validateImageId = [
+  check('imageId')
+    .isInt({ min: 1 })
+    .withMessage('imageId must be a positive integer')
+    .notEmpty()
+    .withMessage('imageId is required'),
+];
+
+
 // DELETE /api/spot-images/:imageId
-router.delete('/:imageId', requireAuth, async (req, res, next) => {
-  const { imageId } = req.params;
-  const userId = req.user.id; // Assuming user is attached to the request after authentication
+router.delete('/:imageId', requireAuth, validateImageId, async (req, res, next) => {
+  const { imageId } = req.params; // Get the imageId from the request params
+  const userId = req.user.id; // Get the authenticated user's ID from req.user
+
+  // Handle validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const err = new Error('Bad Request');
+    err.errors = errors.array();
+    err.status = 400;
+    return next(err); // Pass the error to the global error handler
+  }
 
   try {
-    // Step 1: Find the SpotImage by ID
+    // Step 1: Check if SpotImage exists
     const spotImage = await SpotImage.findByPk(imageId);
 
-    // Step 2: If the SpotImage doesn't exist, return 404
+    // If the SpotImage doesn't exist, return a 404 error
     if (!spotImage) {
       const error = new Error('Spot Image couldn\'t be found');
       error.status = 404;
       return next(error); // Pass the error to the global error handler
     }
 
-    // Step 3: Find the associated Spot
+    // Step 2: Find the associated Spot for the SpotImage
     const spot = await Spot.findByPk(spotImage.spotId);
 
-    // Step 4: If the Spot doesn't exist or the user is not the owner, return 403
-    if (!spot || spot.userId !== userId) {
-      const error = new Error('You do not have permission to delete this image');
-      error.status = 403;
-      return next(error); // Forbidden
+    // If the Spot doesn't exist, return a 404 error
+    if (!spot) {
+      const error = new Error('Spot associated with this image doesn\'t exist');
+      error.status = 404;
+      return next(error);
     }
 
-    // Step 5: Delete the SpotImage
+    // Debug: Log the authenticated user and spot owner
+    console.log(`Authenticated userId: ${userId}, Spot owner userId: ${spot.userId}`);
+
+    // Step 3: Check if the authenticated user is the owner of the Spot
+    if (spot.userId !== userId) {
+      const error = new Error('You do not have permission to delete this image');
+      error.status = 403; // Forbidden
+      return next(error); // Pass the error to the global error handler
+    }
+
+    // Step 4: Delete the SpotImage
     await spotImage.destroy();
 
-    // Step 6: Return a success response
+    // Step 5: Return success response
     return res.status(200).json({
       message: 'Successfully deleted',
     });
-
   } catch (error) {
-    next(error); // Handle any unexpected errors
+    // Catch any unexpected errors and forward to the global error handler
+    next(error);
   }
 });
 
