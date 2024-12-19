@@ -1,9 +1,15 @@
 const express = require("express");
 const { requireAuth } = require("../../utils/auth");
-const { Spot, Review, SpotImage, User } = require("../../db/models");
+const {
+  Spot,
+  Review,
+  SpotImage,
+  User,
+  ReviewImage,
+} = require("../../db/models");
 const { check, validationResult, query } = require("express-validator");
 const { validator } = require("validator");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 
 const router = express.Router();
 
@@ -53,45 +59,45 @@ const validateReviews = [
 ];
 
 const validateQueryParams = [
-    query("page")
+  query("page")
     .optional()
     .isInt({ min: 1 })
     .withMessage("Page must be greater than or equal to 1"),
 
-    query("size")
+  query("size")
     .optional()
     .isInt({ min: 1, max: 20 })
     .withMessage("Size must be between 1 and 20"),
 
-    query("minLat")
+  query("minLat")
     .optional()
     .isDecimal()
     .withMessage("Minimum latitude is invalid"),
 
-    query("maxLat")
+  query("maxLat")
     .optional()
     .isDecimal()
     .withMessage("Maximum latitude is invalid"),
 
-    query("minLng")
+  query("minLng")
     .optional()
     .isDecimal()
     .withMessage("Minimum longitude is invalid"),
 
-    query("maxLng")
+  query("maxLng")
     .optional()
     .isDecimal()
     .withMessage("Maximum longitude is invalid"),
 
-    query('minPrice')
+  query("minPrice")
     .optional()
-    .isInt({min: 0})
-    .withMessage('Minimum price must be greater than or equal to 0'),
+    .isInt({ min: 0 })
+    .withMessage("Minimum price must be greater than or equal to 0"),
 
-    query('maxPrice')
+  query("maxPrice")
     .optional()
-    .isInt({min: 0})
-    .withMessage('Maximum price must be greater than or equal to 0'),
+    .isInt({ min: 0 })
+    .withMessage("Maximum price must be greater than or equal to 0"),
 ];
 
 // Middleware to handle validation errors
@@ -218,7 +224,67 @@ router.get("/current", requireAuth, async (req, res) => {
   }
 });
 
-// * 3. GET /api/spots/:spotId - Get details of a Spot by id
+// * 3. GET /api/spots/:spotId/reviews - Get all Reviews by a Spot's id
+router.get("/:spotId/reviews", async (req, res) => {
+  try {
+    let { spotId } = req.params;
+    spotId = Number(spotId);
+
+    if (spotId && !isNaN(spotId)) {
+      let Reviews = await Review.findAll({
+        // * find the reviews by the spotId
+        where: {
+          spotId,
+        },
+        attributes: [
+          "id",
+          "userId",
+          "spotId",
+          "review",
+          "stars",
+          "createdAt",
+          "updatedAt",
+        ],
+        include: [
+          {
+            model: User,
+            attributes: ["id", "firstName", "lastName"],
+          },
+        ],
+      });
+
+      if (!Reviews) throw new Error("Spot couldn't be found");
+
+      const reviewId = Reviews[0].dataValues.id;
+
+      const foundReviewImage = await ReviewImage.findAll({
+        where: {
+          reviewId,
+        },
+        attributes: ["id", "url"],
+      });
+
+      const reviewsArray = Reviews.map((review) => {
+        let reviewObj = review.toJSON();
+
+        if (review && !review.ReviewImages) {
+          console.log("no images here");
+          reviewObj.ReviewImages = foundReviewImage;
+
+          return reviewObj;
+        }
+      });
+
+      res.status(200).json({ Reviews: reviewsArray });
+    }
+  } catch (err) {
+    res.status(404).json({
+      message: "Spot couldn't be found",
+    });
+  }
+});
+
+// * 4. GET /api/spots/:spotId - Get details of a Spot by id
 router.get("/:spotId", async (req, res) => {
   try {
     const { spotId } = req.params;
@@ -285,7 +351,7 @@ router.get("/:spotId", async (req, res) => {
   }
 });
 
-// * 4. POST /api/spots - Create a new Spot
+// * 5. POST /api/spots - Create a new Spot
 router.post(
   "/",
   requireAuth,
@@ -366,7 +432,7 @@ router.post(
   }
 );
 
-// 5. POST /api/spots/:spotId/images - Add an Image to a Spot
+// * 6. POST /api/spots/:spotId/images - Add an Image to a Spot
 router.post("/:spotId/images", requireAuth, async (req, res) => {
   try {
     const { spotId } = req.params;
@@ -411,7 +477,7 @@ router.post("/:spotId/images", requireAuth, async (req, res) => {
   }
 });
 
-// * 6.  POST /api/spots/:spotId/reviews Create a Review
+// * 7.  POST /api/spots/:spotId/reviews Create a Review
 router.post(
   "/:spotId/reviews",
   requireAuth,
@@ -472,7 +538,7 @@ router.post(
   }
 );
 
-// * 7.  PUT /api/spots/:spotId - Edit a Spot
+// * 8.  PUT /api/spots/:spotId - Edit a Spot
 router.put(
   "/:spotId",
   requireAuth,
@@ -549,7 +615,7 @@ router.put(
   }
 );
 
-// * 8. DELETE /api/spots/:spotId - Delete a Spot
+// * 9. DELETE /api/spots/:spotId - Delete a Spot
 router.delete("/:spotId", requireAuth, async (req, res) => {
   try {
     const { spotId } = req.params;
