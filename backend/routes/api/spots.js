@@ -45,7 +45,10 @@ const validateSpotFields = [
 
 const validateReviews = [
   check("review").notEmpty().withMessage("Review text is required"),
-  check('stars').notEmpty().isInt({ min: 1, max: 5 }).withMessage("Stars must be an integer from 1 to 5")
+  check("stars")
+    .notEmpty()
+    .isInt({ min: 1, max: 5 })
+    .withMessage("Stars must be an integer from 1 to 5"),
 ];
 
 // Middleware to handle validation errors
@@ -343,15 +346,22 @@ router.post("/:spotId/images", requireAuth, async (req, res) => {
 });
 
 // 6. POST /api/spots/:spotId/reviews Create a Review
-router.post("/:spotId/reviews", requireAuth, async (req, res) => {
-  const {spotId} = req.params;
-  console.log(spotId);
-  const foundSpot = await Spot.findByPk({
-    where: {
-      id: spotId
+router.post(
+  "/:spotId/reviews",
+  requireAuth,
+  validateReviews,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { spotId } = req.params;
+      console.log(spotId);
+      const foundSpot = await Spot.findByPk(2000);
+      if (!foundSpot) throw Error("spot not found !!!!!!!!!");
+    } catch (err) {
+      console.log(err);
     }
-  })
-});
+  }
+);
 
 // 7. PUT /api/spots/:spotId - Edit a Spot
 router.put(
