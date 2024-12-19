@@ -1,7 +1,7 @@
 const express = require("express");
 const { requireAuth } = require("../../utils/auth");
 const { Spot, Review, SpotImage, User } = require("../../db/models");
-const { check, validationResult } = require("express-validator");
+const { check, validationResult, query } = require("express-validator");
 const { validator } = require("validator");
 const { Op } = require("sequelize");
 
@@ -50,6 +50,48 @@ const validateReviews = [
     .notEmpty()
     .isInt({ min: 1, max: 5 })
     .withMessage("Stars must be an integer from 1 to 5"),
+];
+
+const validateQueryParams = [
+    query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Page must be greater than or equal to 1"),
+
+    query("size")
+    .optional()
+    .isInt({ min: 1, max: 20 })
+    .withMessage("Size must be between 1 and 20"),
+
+    query("minLat")
+    .optional()
+    .isDecimal()
+    .withMessage("Minimum latitude is invalid"),
+
+    query("maxLat")
+    .optional()
+    .isDecimal()
+    .withMessage("Maximum latitude is invalid"),
+
+    query("minLng")
+    .optional()
+    .isDecimal()
+    .withMessage("Minimum longitude is invalid"),
+
+    query("maxLng")
+    .optional()
+    .isDecimal()
+    .withMessage("Maximum longitude is invalid"),
+
+    query('minPrice')
+    .optional()
+    .isInt({min: 0})
+    .withMessage('Minimum price must be greater than or equal to 0'),
+
+    query('maxPrice')
+    .optional()
+    .isInt({min: 0})
+    .withMessage('Maximum price must be greater than or equal to 0'),
 ];
 
 // Middleware to handle validation errors
@@ -115,23 +157,46 @@ async function addExtraSpotInfo(spot) {
 // --------------------
 
 // * 1. GET /api/spots - Get all Spots
-router.get("/", async (req, res) => {
-  try {
-    const allSpots = await Spot.findAll();
+router.get(
+  "/",
+  validateQueryParams,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      let { page = 1, size = 20 } = req.query;
 
-    // Add avgRating and previewImage to each spot
-    const spotsWithInfo = await Promise.all(
-      allSpots.map(async (spot) => {
-        return await addExtraSpotInfo(spot);
-      })
-    );
+      if (size && size > 20) {
+        size = 20;
+      }
 
-    return res.status(200).json({ Spots: spotsWithInfo });
-  } catch (error) {
-    console.error("Error in GET /api/spots:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+      if (page && size) {
+        page = Number(page);
+        size = Number(size);
+        console.log(page, size);
+      }
+
+      limit = size;
+      offset = size * (page - 1);
+
+      const allSpots = await Spot.findAll({
+        limit,
+        offset,
+      });
+
+      // Add avgRating and previewImage to each spot
+      const spotsWithInfo = await Promise.all(
+        allSpots.map(async (spot) => {
+          return await addExtraSpotInfo(spot);
+        })
+      );
+
+      return res.status(200).json({ Spots: spotsWithInfo, page, size });
+    } catch (error) {
+      console.error("Error in GET /api/spots:", error);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
   }
-});
+);
 
 // * 2. GET /api/spots/current - Get all Spots owned by Current User
 router.get("/current", requireAuth, async (req, res) => {
