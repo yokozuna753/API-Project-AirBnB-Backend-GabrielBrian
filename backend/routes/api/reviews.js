@@ -1,107 +1,116 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 
-const { Spot, Review, SpotImage, User , ReviewImage} = require("../../db/models");
+const {
+  Spot,
+  Review,
+  SpotImage,
+  User,
+  ReviewImage,
+} = require("../../db/models");
 const { check, validationResult } = require("express-validator");
-const {validator} = require('validator');
+const { validator } = require("validator");
 const { setTokenCookie, requireAuth } = require("../../utils/auth");
 const { handleValidationErrors } = require("../../utils/validation");
-
-
 
 const { where } = require("sequelize");
 
 const router = express.Router();
 
-router.post('')
+// * 1. GET  /api/reviews/current - Get all Reviews of the Current User
+router.get("/current", requireAuth, async (req, res) => {
+  
+    const { id } = req.user;
 
-router.get("/current", async (req, res) => {
-  const { id } = req.user;
-  console.log(id);
-
-  const reviews = await Review.findAll({
-    include: [
-      {
-        model: User,
-        as: "User",
-        attributes: [["id", "id"], ["firstName", "firstName"], "lastName"],
-      },
-      {
-        model: Spot,
-        as: "Spot",
-        attributes: {
-          exclude: ["description", "createdAt", "updatedAt"],
+    const reviews = await Review.findAll({
+      attributes: [
+        "id",
+        "userId",
+        "spotId",
+        "review",
+        "stars",
+        "createdAt",
+        "updatedAt",
+      ],
+      include: [
+        {
+          model: User,
+          as: "User",
+          attributes: [["id", "id"], ["firstName", "firstName"], "lastName"],
         },
-        include: [
-          {
-            model: SpotImage,
-            as: "SpotImages", // Use the alias from your model definition
-            attributes: [["url", "previewImage"]], // Renaming the field to 'previewImage'
-            limit: 1, // Optionally, limit to only the first SpotImage (if you want only one image)
+        {
+          model: Spot,
+          as: "Spot",
+          attributes: {
+            exclude: ["description", "createdAt", "updatedAt"],
           },
-        ],
-      },
-    ],
-    where: { id },
-  });
+          include: [
+            {
+              model: SpotImage,
+              as: "SpotImages",
+              attributes: [["url", "previewImage"]], // Renaming the field to 'previewImage'
+            },
+          ],
+        },
+      ],
+      where: { id },
+    });
 
-  const formattedReviews = reviews.map((review) => {
-    const reviewObj = review.toJSON(); // Convert to plain object
+    const formattedReviews = reviews.map((review) => {
+      const reviewObj = review.toJSON(); // Convert to plain object
 
-    // If there are SpotImages, we want to pull the first one and assign its url as previewImage
-    if (
-      reviewObj.Spot &&
-      reviewObj.Spot.SpotImages &&
-      reviewObj.Spot.SpotImages.length > 0
-    ) {
-      reviewObj.Spot.previewImage = reviewObj.Spot.SpotImages[0].previewImage;
-      // Remove the SpotImages array after extracting the previewImage
-      delete reviewObj.Spot.SpotImages;
-    }
+      // If there are SpotImages, we want to pull the first one and assign its url as previewImage
+      if (
+        reviewObj.Spot &&
+        reviewObj.Spot.SpotImages &&
+        reviewObj.Spot.SpotImages.length > 0
+      ) {
+        reviewObj.Spot.previewImage = reviewObj.Spot.SpotImages[0].previewImage;
+        // Remove the SpotImages array after extracting the previewImage
+        delete reviewObj.Spot.SpotImages;
+      }
 
-    return reviewObj;
-  });
+      return reviewObj;
+    });
 
-  const reviewImages = await ReviewImage.findAll({
-    where: { id },
-    attributes: ["id", "url"],
-  });
+    const reviewImages = await ReviewImage.findAll({
+      where: { id },
+      attributes: ["id", "url"],
+    });
 
-  formattedReviews[0].ReviewImages = reviewImages;
+    formattedReviews[0].ReviewImages = reviewImages;
 
-  res.status(200).json({ Reviews: formattedReviews });
+    return res.status(200).json({ Reviews: formattedReviews });
+  
 });
 
+// ! ANOTHER ROUTE HERE
 router.post("/:reviewId/images", async (req, res) => {
-  try{
+  try {
     let { reviewId } = req.params;
-  let foundReview;
-  reviewId = Number(reviewId);
-  if(!isNaN(reviewId)){
-     foundReview = Review.findOne({
+    let foundReview;
+    reviewId = Number(reviewId);
+    if (!isNaN(reviewId)) {
+      foundReview = Review.findOne({
         where: { id: reviewId },
       });
-  }
-  
+    }
 
-  let { url: link } = req.body;
+    let { url: link } = req.body;
 
-  if (foundReview) {
-    
-    let newImage = await ReviewImage.create({
-      reviewId,
-      url: link,
-    });
-    const { id, url } = newImage;
-    console.log(id, url);
-    res.status(201).json({
-      id,
-      url,
-    });
-  }
-  }catch(err){
-    
-  }
+    if (foundReview) {
+      let newImage = await ReviewImage.create({
+        reviewId,
+        url: link,
+      });
+      const { id, url } = newImage;
+      console.log(id, url);
+      res.status(201).json({
+        id,
+        url,
+      });
+    }
+  } catch (err) {}
 });
 
 module.exports = router;
