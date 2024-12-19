@@ -3,6 +3,7 @@ const { requireAuth } = require("../../utils/auth");
 const { Spot, Review, SpotImage, User } = require("../../db/models");
 const { check, validationResult } = require("express-validator");
 const { validator } = require("validator");
+const { Op } = require("sequelize");
 
 const router = express.Router();
 
@@ -113,7 +114,7 @@ async function addExtraSpotInfo(spot) {
 // Routes
 // --------------------
 
-// 1. GET /api/spots - Get all Spots
+// * 1. GET /api/spots - Get all Spots
 router.get("/", async (req, res) => {
   try {
     const allSpots = await Spot.findAll();
@@ -132,7 +133,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 2. GET /api/spots/current - Get all Spots owned by Current User
+// * 2. GET /api/spots/current - Get all Spots owned by Current User
 router.get("/current", requireAuth, async (req, res) => {
   try {
     const currentUserId = req.user.id;
@@ -152,7 +153,7 @@ router.get("/current", requireAuth, async (req, res) => {
   }
 });
 
-// 3. GET /api/spots/:spotId - Get details of a Spot by id
+// * 3. GET /api/spots/:spotId - Get details of a Spot by id
 router.get("/:spotId", async (req, res) => {
   try {
     const { spotId } = req.params;
@@ -219,7 +220,7 @@ router.get("/:spotId", async (req, res) => {
   }
 });
 
-// 4. POST /api/spots - Create a new Spot
+// * 4. POST /api/spots - Create a new Spot
 router.post(
   "/",
   requireAuth,
@@ -345,25 +346,68 @@ router.post("/:spotId/images", requireAuth, async (req, res) => {
   }
 });
 
-// 6. POST /api/spots/:spotId/reviews Create a Review
+// * 6.  POST /api/spots/:spotId/reviews Create a Review
 router.post(
   "/:spotId/reviews",
   requireAuth,
   validateReviews,
   handleValidationErrors,
   async (req, res) => {
-    try {
-      const { spotId } = req.params;
-      console.log(spotId);
-      const foundSpot = await Spot.findByPk(2000);
-      if (!foundSpot) throw Error("spot not found !!!!!!!!!");
-    } catch (err) {
-      console.log(err);
+    let { spotId } = req.params;
+
+    const userId = req.user.id;
+    // console.log(userId);
+    // console.log(spotId);
+
+    const existingReview = await Review.findOne({
+      where: {
+        [Op.and]: [{ userId }, { spotId }],
+      },
+    });
+
+    console.log(existingReview);
+    if (existingReview) {
+      return res.status(500).json({
+        message: "User already has a review for this spot",
+      });
     }
+
+    const foundSpot = await Spot.findByPk(spotId);
+    if (!foundSpot)
+      return res.status(404).json({ message: "Spot couldn't be found" });
+    const { review, stars } = req.body;
+
+    await Review.create({
+      userId,
+      spotId: Number(spotId),
+      review,
+      stars,
+    });
+
+    let found = await Review.findAll({
+      where: {
+        userId,
+      },
+      attributes: [
+        "id",
+        "userId",
+        "spotId",
+        "review",
+        "stars",
+        "createdAt",
+        "updatedAt",
+      ],
+    });
+
+    found = found[found.length - 1];
+
+    res.status(201).json({ ...found.dataValues });
+
+    // console.log(reviewCreated.toJSON());
   }
 );
 
-// 7. PUT /api/spots/:spotId - Edit a Spot
+// * 7.  PUT /api/spots/:spotId - Edit a Spot
 router.put(
   "/:spotId",
   requireAuth,
@@ -440,7 +484,7 @@ router.put(
   }
 );
 
-// 8. DELETE /api/spots/:spotId - Delete a Spot
+// * 8. DELETE /api/spots/:spotId - Delete a Spot
 router.delete("/:spotId", requireAuth, async (req, res) => {
   try {
     const { spotId } = req.params;
