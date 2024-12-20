@@ -9,8 +9,8 @@ If you're testing locally, ensure your server is running.
 */
 
 /* For Local Testing */
-export const apiBaseUrl = 'http://localhost:8000/api';
+// export const apiBaseUrl = 'http://localhost:8000/api';
 
 
 /* For Testing Your Live Site Locally*/
-// export const apiBaseUrl = 'https://first-project-deployed.onrender.com/api';
+export const apiBaseUrl = 'https://first-project-deployed.onrender.com/api';

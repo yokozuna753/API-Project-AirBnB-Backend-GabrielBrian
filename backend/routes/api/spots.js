@@ -196,6 +196,17 @@ router.get(
         })
       );
 
+      for(let spot of spotsWithInfo){
+        console.log(spot);
+        let {lat, lng} = spot;
+        lat = Number(lat);
+        lng = Number(lng);
+        // console.log("this is the LATITUDE", lat);
+        // console.log('THIS IS THE LONGITUDE', lng);
+      }
+
+
+
       return res.status(200).json({ Spots: spotsWithInfo, page, size });
     } catch (error) {
       console.error("Error in GET /api/spots:", error);
