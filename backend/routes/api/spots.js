@@ -196,6 +196,8 @@ router.get(
         })
       );
 
+      console.log(spotsWithInfo);
+
       return res.status(200).json({ Spots: spotsWithInfo, page, size });
     } catch (error) {
       console.error("Error in GET /api/spots:", error);
