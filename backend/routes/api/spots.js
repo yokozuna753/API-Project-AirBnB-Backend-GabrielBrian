@@ -339,7 +339,7 @@ router.get("/:spotId", async (req, res) => {
       lng: parseFloat(spotData.lng),
       name: spotData.name,
       description: spotData.description,
-      price: parseFloat(spotData.price),
+      price: Number(spotData.price),
       createdAt: spotData.createdAt,
       updatedAt: spotData.updatedAt,
       numReviews: numReviews,
@@ -399,7 +399,7 @@ router.post(
         lng: parseFloat(newSpot.lng),
         name: newSpot.name,
         description: newSpot.description,
-        price: parseFloat(newSpot.price),
+        price: Number(newSpot.price),
         createdAt: newSpot.createdAt,
         updatedAt: newSpot.updatedAt,
       });
@@ -597,7 +597,7 @@ router.put(
         lng: parseFloat(spot.lng),
         name: spot.name,
         description: spot.description,
-        price: parseFloat(spot.price),
+        price: Number(spot.price),
         createdAt: spot.createdAt,
         updatedAt: spot.updatedAt,
       });
