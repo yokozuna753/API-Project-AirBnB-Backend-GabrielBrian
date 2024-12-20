@@ -1,6 +1,6 @@
-<div style="text-align: center;font-size: 30px;font-weight:bold">
-AirBnB Clone
-</div>
+
+# CozyVibe
+
 
 ## Database Schema Design
 
