@@ -196,18 +196,15 @@ router.get(
         })
       );
 
-      for(let spot of spotsWithInfo){
-        console.log(spot);
-        let {lat, lng} = spot;
-        lat = Number(lat);
-        lng = Number(lng);
-        // console.log("this is the LATITUDE", lat);
-        // console.log('THIS IS THE LONGITUDE', lng);
-      }
+      const spots = spotsWithInfo.map(spot => ({
+        ...spot,
+        lat: parseFloat(spot.lat),
+        lng: parseFloat(spot.lng)
+      }));
 
 
 
-      return res.status(200).json({ Spots: spotsWithInfo, page, size });
+      return res.status(200).json({ Spots: spots, page, size });
     } catch (error) {
       console.error("Error in GET /api/spots:", error);
       return res.status(500).json({ message: "Internal Server Error" });
