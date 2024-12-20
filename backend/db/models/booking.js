@@ -21,9 +21,10 @@ module.exports = (sequelize, DataTypes) => {
           notInThePast(value) {
             let today = new Date();
             today.setHours(0, 0, 0, 0); // Set time to 00:00:00 to ignore the time part
+            today = today.toISOString().split('T')[0];
 
             // Compare startDate with today's date
-            if (new Date(value) < today) {
+            if (new Date(value).toISOString().split('T')[0] < today) {
               throw new Error("Start date must not be in the past");
             }
           },

@@ -1,4 +1,6 @@
-# AirBnB Clone
+
+# CozyVibe
+
 
 ## Database Schema Design
 
@@ -7,27 +9,34 @@
 [airbnb-database-schema]: https://appacademy-open-assets.s3.us-west-1.amazonaws.com/Modular-Curriculum/content/week-12/airbnb-db-schema.png
 [airbnb-db-diagram-info]: https://appacademy-open-assets.s3.us-west-1.amazonaws.com/Modular-Curriculum/content/week-12/airbnb-db-diagram-info.txt
 
-## API Documentation
+<br>
 
-## USER AUTHENTICATION/AUTHORIZATION
+# API Documentation
 
-### All endpoints that require authentication
+## User Authentication/Authorization
 
-All endpoints that require a current user to be logged in.
+### Endpoints Requiring Authentication
 
-* Request: endpoints that require authentication
-* Error Response: Require authentication
-  * Status Code: 401
-  * Headers:
-    * Content-Type: application/json
-  * Body:
+These are the endpoints that require the user to be logged in. Access to these endpoints will be denied if no user is authenticated.
 
-    ```json
-    {
-      "message": "Authentication required"
-    }
-    ```
+#### Request: 
+Endpoints that require authentication.
 
+#### Error Response
+
+When authentication is missing or invalid, the API will return a `401 Unauthorized` status. Here’s an example of the error response:
+
+**Status Code:** 401  
+**Headers:**
+  - `Content-Type`: application/json
+
+**Body:**
+```json
+{
+  "message": "Authentication required"
+}
+```
+---
 ### All endpoints that require proper authorization
 
 All endpoints that require authentication and the current user does not have the
@@ -45,15 +54,15 @@ correct role(s) or permission(s).
       "message": "Forbidden"
     }
     ```
-
+---
 ### Get the Current User
 
 Returns the information about the current user that is logged in.
 
 * Require Authentication: false
 * Request
-  * Method: GET
-  * Route path: /api/session
+  * Method: `GET`
+  * Route path: `/api/session`
   * Body: none
 
 * Successful Response when there is a logged in user
@@ -85,7 +94,7 @@ Returns the information about the current user that is logged in.
       "user": null
     }
     ```
-
+---
 ### Log In a User
 
 Logs in a current user with valid credentials and returns the current user's
@@ -93,8 +102,8 @@ information.
 
 * Require Authentication: false
 * Request
-  * Method: POST
-  * Route path: /api/session
+  * Method: `POST`
+  * Route path: `/api/session`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -151,7 +160,7 @@ information.
       }
     }
     ```
-
+---
 ### Sign Up a User
 
 Creates a new user, logs them in as the current user, and returns the current
@@ -159,8 +168,8 @@ user's information.
 
 * Require Authentication: false
 * Request
-  * Method: POST
-  * Route path: /api/users
+  * Method: `POST`
+  * Route path: `/api/users`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -226,7 +235,7 @@ user's information.
       }
     }
     ```
-
+---
 ## SPOTS
 
 ### Get all Spots
@@ -235,8 +244,8 @@ Returns all the spots.
 
 * Require Authentication: false
 * Request
-  * Method: GET
-  * Route path: /api/spots
+  * Method: `GET`
+  * Route path: `/api/spots`
   * Body: none
 
 * Successful Response
@@ -268,15 +277,15 @@ Returns all the spots.
       ]
     }
     ```
-
+---
 ### Get all Spots owned by the Current User
 
 Returns all the spots owned (created) by the current user.
 
 * Require Authentication: true
 * Request
-  * Method: GET
-  * Route path: /api/spots/current
+  * Method: `GET`
+  * Route path: `/api/spots/current`
   * Body: none
 
 * Successful Response
@@ -308,15 +317,15 @@ Returns all the spots owned (created) by the current user.
       ]
     }
     ```
-
+---
 ### Get details of a Spot from an id
 
 Returns the details of a spot specified by its id.
 
 * Require Authentication: false
 * Request
-  * Method: GET
-  * Route path: /api/spots/:spotId
+  * Method: `GET`
+  * Route path: `/api/spots/:spotId`
   * Body: none
 
 * Successful Response
@@ -373,15 +382,15 @@ Returns the details of a spot specified by its id.
       "message": "Spot couldn't be found"
     }
     ```
-
+---
 ### Create a Spot
 
 Creates and returns a new spot.
 
 * Require Authentication: true
 * Request
-  * Method: POST
-  * Route path: /api/spots
+  * Method: `POST`
+  * Route path: `/api/spots`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -446,7 +455,7 @@ Creates and returns a new spot.
       }
     }
     ```
-
+---
 ### Add an Image to a Spot based on the Spot's id
 
 Create and return a new image for a spot specified by id.
@@ -454,8 +463,8 @@ Create and return a new image for a spot specified by id.
 * Require Authentication: true
 * Require proper authorization: Spot must belong to the current user
 * Request
-  * Method: POST
-  * Route path: /api/spots/:spotId/images
+  * Method: `POST`
+  * Route path: `/api/spots/:spotId/images`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -492,7 +501,7 @@ Create and return a new image for a spot specified by id.
       "message": "Spot couldn't be found"
     }
     ```
-
+---
 ### Edit a Spot
 
 Updates and returns an existing spot.
@@ -500,8 +509,8 @@ Updates and returns an existing spot.
 * Require Authentication: true
 * Require proper authorization: Spot must belong to the current user
 * Request
-  * Method: PUT
-  * Route path: /api/spots/:spotId
+  * Method: `PUT`
+  * Route path: `/api/spots/:spotId`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -578,7 +587,7 @@ Updates and returns an existing spot.
       "message": "Spot couldn't be found"
     }
     ```
-
+---
 ### Delete a Spot
 
 Deletes an existing spot.
@@ -586,8 +595,8 @@ Deletes an existing spot.
 * Require Authentication: true
 * Require proper authorization: Spot must belong to the current user
 * Request
-  * Method: DELETE
-  * Route path: /api/spots/:spotId
+  * Method: `DELETE`
+  * Route path: `/api/spots/:spotId`
   * Body: none
 
 * Successful Response
@@ -613,7 +622,7 @@ Deletes an existing spot.
       "message": "Spot couldn't be found"
     }
     ```
-
+---
 ## REVIEWS
 
 ### Get all Reviews of the Current User
@@ -622,8 +631,8 @@ Returns all the reviews written by the current user.
 
 * Require Authentication: true
 * Request
-  * Method: GET
-  * Route path: /api/reviews/current
+  * Method: `GET`
+  * Route path: `/api/reviews/current`
   * Body: none
 
 * Successful Response
@@ -671,15 +680,15 @@ Returns all the reviews written by the current user.
       ]
     }
     ```
-
+---
 ### Get all Reviews by a Spot's id
 
 Returns all the reviews that belong to a spot specified by id.
 
 * Require Authentication: false
 * Request
-  * Method: GET
-  * Route path: /api/spots/:spotId/reviews
+  * Method: `GET`
+  * Route path: `/api/spots/:spotId/reviews`
   * Body: none
 
 * Successful Response
@@ -726,15 +735,15 @@ Returns all the reviews that belong to a spot specified by id.
       "message": "Spot couldn't be found"
     }
     ```
-
+---
 ### Create a Review for a Spot based on the Spot's id
 
 Create and return a new review for a spot specified by id.
 
 * Require Authentication: true
 * Request
-  * Method: POST
-  * Route path: /api/spots/:spotId/reviews
+  * Method: `POST`
+  * Route path: `/api/spots/:spotId/reviews`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -803,7 +812,7 @@ Create and return a new review for a spot specified by id.
       "message": "User already has a review for this spot"
     }
     ```
-
+---
 ### Add an Image to a Review based on the Review's id
 
 Create and return a new image for a review specified by id.
@@ -811,8 +820,8 @@ Create and return a new image for a review specified by id.
 * Require Authentication: true
 * Require proper authorization: Review must belong to the current user
 * Request
-  * Method: POST
-  * Route path: /api/reviews/:reviewId/images
+  * Method: `POST`
+  * Route path: `/api/reviews/:reviewId/images`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -860,7 +869,7 @@ Create and return a new image for a review specified by id.
       "message": "Maximum number of images for this resource was reached"
     }
     ```
-
+---
 ### Edit a Review
 
 Update and return an existing review.
@@ -868,8 +877,8 @@ Update and return an existing review.
 * Require Authentication: true
 * Require proper authorization: Review must belong to the current user
 * Request
-  * Method: PUT
-  * Route path: /api/reviews/:reviewId
+  * Method: `PUT`
+  * Route path: `/api/reviews/:reviewId`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -926,7 +935,7 @@ Update and return an existing review.
       "message": "Review couldn't be found"
     }
     ```
-
+---
 ### Delete a Review
 
 Delete an existing review.
@@ -934,8 +943,8 @@ Delete an existing review.
 * Require Authentication: true
 * Require proper authorization: Review must belong to the current user
 * Request
-  * Method: DELETE
-  * Route path: /api/reviews/:reviewId
+  * Method: `DELETE`
+  * Route path: `/api/reviews/:reviewId`
   * Body: none
 
 * Successful Response
@@ -961,7 +970,7 @@ Delete an existing review.
       "message": "Review couldn't be found"
     }
     ```
-
+---
 ## BOOKINGS
 
 ### Get all of the Current User's Bookings
@@ -970,8 +979,8 @@ Return all the bookings that the current user has made.
 
 * Require Authentication: true
 * Request
-  * Method: GET
-  * Route path: /api/bookings/current
+  * Method: `GET`
+  * Route path: `/api/bookings/current`
   * Body: none
 
 * Successful Response
@@ -1008,15 +1017,15 @@ Return all the bookings that the current user has made.
       ]
     }
     ```
-
+---
 ### Get all Bookings for a Spot based on the Spot's id
 
 Return all the bookings for a spot specified by id.
 
 * Require Authentication: true
 * Request
-  * Method: GET
-  * Route path: /api/spots/:spotId/bookings
+  * Method: `GET`
+  * Route path: `/api/spots/:spotId/bookings`
   * Body: none
 
 * Successful Response: If you ARE NOT the owner of the spot.
@@ -1075,7 +1084,7 @@ Return all the bookings for a spot specified by id.
       "message": "Spot couldn't be found"
     }
     ```
-
+---
 ### Create a Booking from a Spot based on the Spot's id
 
 Create and return a new booking from a spot specified by id.
@@ -1083,8 +1092,8 @@ Create and return a new booking from a spot specified by id.
 * Require Authentication: true
 * Require proper authorization: Spot must NOT belong to the current user
 * Request
-  * Method: POST
-  * Route path: /api/spots/:spotId/bookings
+  * Method: `POST`
+  * Route path: `/api/spots/:spotId/bookings`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -1157,7 +1166,7 @@ Create and return a new booking from a spot specified by id.
       }
     }
     ```
-
+---
 ### Edit a Booking
 
 Update and return an existing booking.
@@ -1165,8 +1174,8 @@ Update and return an existing booking.
 * Require Authentication: true
 * Require proper authorization: Booking must belong to the current user
 * Request
-  * Method: PUT
-  * Route path: /api/bookings/:bookingId
+  * Method: `PUT`
+  * Route path: `/api/bookings/:bookingId`
   * Headers:
     * Content-Type: application/json
   * Body:
@@ -1251,7 +1260,7 @@ Update and return an existing booking.
       }
     }
     ```
-
+---
 ### Delete a Booking
 
 Delete an existing booking.
@@ -1260,8 +1269,8 @@ Delete an existing booking.
 * Require proper authorization: Booking must belong to the current user or the
   Spot must belong to the current user
 * Request
-  * Method: DELETE
-  * Route path: /api/bookings/:bookingId
+  * Method: `DELETE`
+  * Route path: `/api/bookings/:bookingId`
   * Body: none
 
 * Successful Response
@@ -1299,7 +1308,7 @@ Delete an existing booking.
       "message": "Bookings that have been started can't be deleted"
     }
     ```
-
+---
 ## IMAGES
 
 ### Delete a Spot Image
@@ -1309,8 +1318,8 @@ Delete an existing image for a Spot.
 * Require Authentication: true
 * Require proper authorization: Spot must belong to the current user
 * Request
-  * Method: DELETE
-  * Route path: /api/spot-images/:imageId
+  * Method: `DELETE`
+  * Route path: `/api/spot-images/:imageId`
   * Body: none
 
 * Successful Response
@@ -1336,7 +1345,7 @@ Delete an existing image for a Spot.
       "message": "Spot Image couldn't be found"
     }
     ```
-
+---
 ### Delete a Review Image
 
 Delete an existing image for a Review.
@@ -1344,8 +1353,8 @@ Delete an existing image for a Review.
 * Require Authentication: true
 * Require proper authorization: Review must belong to the current user
 * Request
-  * Method: DELETE
-  * Route path: /api/review-images/:imageId
+  * Method: `DELETE`
+  * Route path: `/api/review-images/:imageId`
   * Body: none
 
 * Successful Response
@@ -1371,15 +1380,15 @@ Delete an existing image for a Review.
       "message": "Review Image couldn't be found"
     }
     ```
-
+---
 ## Add Query Filters to Get All Spots
 
 Return spots filtered by query parameters.
 
 * Require Authentication: false
 * Request
-  * Method: GET
-  * Route path: /api/spots
+  * Method: `GET`
+  * Route path: `/api/spots`
   * Query Parameters
     * page: integer, minimum: 1, default: 1
     * size: integer, minimum: 1, maximum: 20, default: 20

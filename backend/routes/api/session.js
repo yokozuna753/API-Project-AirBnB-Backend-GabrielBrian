@@ -40,10 +40,10 @@ router.post(
     });
 
     if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
-      const err = new Error('Login failed');
+      const err = new Error('Invalid credentials');
       err.status = 401;
       err.title = 'Login failed';
-      err.errors = { credential: 'The provided credentials were invalid.' };
+      err.errors = { message: 'Invalid credentials' };
       return next(err);
     }
 
@@ -57,7 +57,7 @@ router.post(
 
     await setTokenCookie(res, safeUser);
 
-    return res.json({
+    return res.status(200).json({
       user: safeUser
     });
   }
@@ -74,22 +74,28 @@ router.delete(
 );
 
 
-router.get(
-  '/',
-  (req, res) => {
-    const { user } = req;
-    if (user) {
-      const safeUser = {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-      };
-      return res.json({
-        user: safeUser
-      });
-    } else return res.json({ user: null });
+// Route to GET the Current User
+router.get('/', (req, res) => {
+  const { user } = req; 
+
+  if (user) {
+    
+    const safeUser = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      username: user.username,
+    };
+
+    return res.status(200).json({ user: safeUser });
+  } else {
+   
+    return res.status(200).json({ user: null });
   }
-);
+});
+
+
 
 module.exports = router;
 
