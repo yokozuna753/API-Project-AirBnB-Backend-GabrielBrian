@@ -222,7 +222,14 @@ router.get("/current", requireAuth, async (req, res) => {
     // Add avgRating and previewImage to each spot
     const spotsWithInfo = await Promise.all(
       userSpots.map(async (spot) => {
-        return await addExtraSpotInfo(spot);
+        const spotWithInfo = await addExtraSpotInfo(spot);
+        
+        // Ensure lat, lng, and price are numbers
+        spotWithInfo.lat = Number(spotWithInfo.lat);
+        spotWithInfo.lng = Number(spotWithInfo.lng);
+        spotWithInfo.price = Number(spotWithInfo.price);
+
+        return spotWithInfo;
       })
     );
 
@@ -232,6 +239,7 @@ router.get("/current", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 // * 3. GET /api/spots/:spotId/reviews - Get all Reviews by a Spot's id
 router.get("/:spotId/reviews", async (req, res) => {
