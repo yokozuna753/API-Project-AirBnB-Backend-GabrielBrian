@@ -199,7 +199,8 @@ router.get(
       const spots = spotsWithInfo.map(spot => ({
         ...spot,
         lat: parseFloat(spot.lat),
-        lng: parseFloat(spot.lng)
+        lng: parseFloat(spot.lng),
+        price: parseFloat(spot.price)
       }));
 
 
